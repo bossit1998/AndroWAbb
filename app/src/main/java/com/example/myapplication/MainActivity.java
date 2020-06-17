@@ -1,10 +1,5 @@
 package com.example.myapplication;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -19,20 +14,29 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static SQLiteService sqLiteHelper;
+    final int REQUEST_CODE_GALLERY = 999;
     EditText edtName, edtPrice;
     Button btnChoose, btnAdd, btnList;
     ImageView imageView;
 
-    final int REQUEST_CODE_GALLERY = 999;
-
-    public static SQLiteService sqLiteHelper;
-
+    public static byte[] imageViewToByte(ImageView image) {
+        Bitmap bitmap = ((BitmapDrawable) image.getDrawable()).getBitmap();
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+        byte[] byteArray = stream.toByteArray();
+        return byteArray;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,13 +54,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 ActivityCompat.requestPermissions(
                         MainActivity.this,
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},REQUEST_CODE_GALLERY);
-//                ActivityCompat.requestPermissions(
-//                        MainActivity.this,
-//                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-//                        REQUEST_CODE_GALLERY
-//                );
-            }
+                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, REQUEST_CODE_GALLERY); }
         });
 
         btnAdd.setOnClickListener(new View.OnClickListener() {
@@ -66,11 +64,11 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(), "Description should not be empty", Toast.LENGTH_SHORT).show();
                 } else if (edtPrice.getText().toString().trim().isEmpty()) {
                     Toast.makeText(getApplicationContext(), "Location should not be empty", Toast.LENGTH_SHORT).show();
-//                } else if (imageView.getDrawable() == null) {
-//                    Toast.makeText(getApplicationContext(), "Please, Add image", Toast.LENGTH_SHORT).show();
+                } else if (imageView.getDrawable() == null) {
+                    Toast.makeText(getApplicationContext(), "Please, Add image", Toast.LENGTH_SHORT).show();
                 } else {
 
-                    try{
+                    try {
                         sqLiteHelper.insertData(
                                 edtName.getText().toString().trim(),
                                 edtPrice.getText().toString().trim(),
@@ -80,12 +78,11 @@ public class MainActivity extends AppCompatActivity {
                         edtName.setText("");
                         edtPrice.setText("");
                         imageView.setImageResource(R.mipmap.ic_launcher);
-                    }
-                    catch (Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
-                }
 
+                }
             }
         });
 
@@ -98,24 +95,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    public static byte[] imageViewToByte(ImageView image) {
-        Bitmap bitmap = ((BitmapDrawable)image.getDrawable()).getBitmap();
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
-        byte[] byteArray = stream.toByteArray();
-        return byteArray;
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
-        if(requestCode == REQUEST_CODE_GALLERY){
-            if(grantResults.length >=0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+        if (requestCode == REQUEST_CODE_GALLERY) {
+            if (grantResults.length >= 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setType("image/*");
                 startActivityForResult(intent, REQUEST_CODE_GALLERY);
-            }
-            else {
+            } else {
                 Toast.makeText(getApplicationContext(), "You don't have permission to access file location!", Toast.LENGTH_SHORT).show();
             }
             return;
@@ -127,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if(requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null){
+        if (requestCode == REQUEST_CODE_GALLERY && resultCode == RESULT_OK && data != null) {
             Uri uri = data.getData();
 
             try {
@@ -144,14 +132,12 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
-    private void init(){
-        edtName = (EditText) findViewById(R.id.edtName);
-        edtPrice = (EditText) findViewById(R.id.edtPrice);
-        btnChoose = (Button) findViewById(R.id.btnChoose);
-        btnAdd = (Button) findViewById(R.id.btnAdd);
-        btnList = (Button) findViewById(R.id.btnList);
-        imageView = (ImageView) findViewById(R.id.imageView);
+    private void init() {
+        edtName = findViewById(R.id.edtName);
+        edtPrice = findViewById(R.id.edtPrice);
+        btnChoose = findViewById(R.id.btnChoose);
+        btnAdd = findViewById(R.id.btnAdd);
+        btnList = findViewById(R.id.btnList);
+        imageView = findViewById(R.id.imageView);
     }
-
-
 }

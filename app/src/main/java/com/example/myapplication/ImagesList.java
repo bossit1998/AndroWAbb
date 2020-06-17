@@ -30,18 +30,18 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 
-public class ImagesList  extends AppCompatActivity {
+public class ImagesList extends AppCompatActivity {
     GridView gridView;
     ArrayList<Images> list;
     ImagesListAdapter adapter = null;
-
+    ImageView imageView;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.images_list_activity);
 
-        gridView = (GridView) findViewById(R.id.gridView);
+        gridView = findViewById(R.id.gridView);
         list = new ArrayList<>();
         adapter = new ImagesListAdapter(this, R.layout.image_items, list);
         gridView.setAdapter(adapter);
@@ -73,8 +73,9 @@ public class ImagesList  extends AppCompatActivity {
                         if (item == 0) {
                             // update
                             Cursor c = MainActivity.sqLiteHelper.getData("SELECT id FROM MYIMAGES");
+                            System.out.println(c);
                             ArrayList<Integer> arrID = new ArrayList<Integer>();
-                            while (c.moveToNext()){
+                            while (c.moveToNext()) {
                                 arrID.add(c.getInt(0));
                             }
                             // show dialog update at here
@@ -84,7 +85,7 @@ public class ImagesList  extends AppCompatActivity {
                             // delete
                             Cursor c = MainActivity.sqLiteHelper.getData("SELECT id FROM MYIMAGES");
                             ArrayList<Integer> arrID = new ArrayList<Integer>();
-                            while (c.moveToNext()){
+                            while (c.moveToNext()) {
                                 arrID.add(c.getInt(0));
                             }
                             showDialogDelete(arrID.get(position));
@@ -97,17 +98,16 @@ public class ImagesList  extends AppCompatActivity {
         });
     }
 
-    ImageView imageViewImage;
-    private void showDialogUpdate(Activity activity, final int position){
+    private void showDialogUpdate(Activity activity, final int position) {
 
         final Dialog dialog = new Dialog(activity);
         dialog.setContentView(R.layout.update_image_activity);
         dialog.setTitle("Update");
 
-        imageViewImage = (ImageView) dialog.findViewById(R.id.imageViewImage);
-        final EditText edtDescription = (EditText) dialog.findViewById(R.id.edtDescription);
-        final EditText edtPlace = (EditText) dialog.findViewById(R.id.edtPlace);
-        Button btnUpdate = (Button) dialog.findViewById(R.id.btnUpdate);
+        imageView = dialog.findViewById(R.id.imageViewImage);
+        final EditText edtName = dialog.findViewById(R.id.edtDescription);
+        final EditText edtPrice = dialog.findViewById(R.id.edtPlace);
+        Button btnUpdate = dialog.findViewById(R.id.btnUpdate);
 
         // set width for dialog
         int width = (int) (activity.getResources().getDisplayMetrics().widthPixels * 0.95);
@@ -116,7 +116,7 @@ public class ImagesList  extends AppCompatActivity {
         dialog.getWindow().setLayout(width, height);
         dialog.show();
 
-        imageViewImage.setOnClickListener(new View.OnClickListener() {
+        imageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // request photo library
@@ -133,23 +133,23 @@ public class ImagesList  extends AppCompatActivity {
             public void onClick(View v) {
                 try {
                     MainActivity.sqLiteHelper.updateData(
-                            edtDescription.getText().toString().trim(),
-                            edtPlace.getText().toString().trim(),
-                            MainActivity.imageViewToByte(imageViewImage),
+                            edtName.getText().toString().trim(),
+                            edtPrice.getText().toString().trim(),
+                            MainActivity.imageViewToByte(imageView),
                             position
                     );
                     dialog.dismiss();
-                    Toast.makeText(getApplicationContext(), "Update successfully!!!",Toast.LENGTH_SHORT).show();
-                }
-                catch (Exception error) {
+                    Toast.makeText(getApplicationContext(), "Update successfully!!!", Toast.LENGTH_SHORT).show();
+                } catch (Exception error) {
                     Log.e("Update error", error.getMessage());
                 }
-                updateFoodList();
+                updateImagesList();
             }
         });
     }
 
-    private void showDialogDelete(final int idImage){
+
+    private void showDialogDelete(final int idImage) {
         final AlertDialog.Builder dialogDelete = new AlertDialog.Builder(ImagesList.this);
 
         dialogDelete.setTitle("Warning!!");
@@ -159,11 +159,11 @@ public class ImagesList  extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 try {
                     MainActivity.sqLiteHelper.deleteData(idImage);
-                    Toast.makeText(getApplicationContext(), "Delete successfully!!!",Toast.LENGTH_SHORT).show();
-                } catch (Exception e){
+                    Toast.makeText(getApplicationContext(), "Delete successfully!!!", Toast.LENGTH_SHORT).show();
+                } catch (Exception e) {
                     Log.e("error", e.getMessage());
                 }
-                updateFoodList();
+                updateImagesList();
             }
         });
 
@@ -176,17 +176,17 @@ public class ImagesList  extends AppCompatActivity {
         dialogDelete.show();
     }
 
-    private void updateFoodList(){
+    private void updateImagesList() {
         // get all data from sqlite
         Cursor cursor = MainActivity.sqLiteHelper.getData("SELECT * FROM MYIMAGES");
         list.clear();
         while (cursor.moveToNext()) {
             int id = cursor.getInt(0);
-            String name = cursor.getString(1);
-            String price = cursor.getString(2);
+            String description = cursor.getString(1);
+            String place = cursor.getString(2);
             byte[] image = cursor.getBlob(3);
 
-            list.add(new Images(id, name, price, image));
+            list.add(new Images(id, description, place, image));
         }
         adapter.notifyDataSetChanged();
     }
@@ -194,13 +194,12 @@ public class ImagesList  extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
-        if(requestCode == 888){
-            if(grantResults.length >0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+        if (requestCode == 888) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Intent intent = new Intent(Intent.ACTION_PICK);
                 intent.setType("image/*");
                 startActivityForResult(intent, 888);
-            }
-            else {
+            } else {
                 Toast.makeText(getApplicationContext(), "You don't have permission to access file location!", Toast.LENGTH_SHORT).show();
             }
             return;
@@ -211,12 +210,12 @@ public class ImagesList  extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 
-        if(requestCode == 888 && resultCode == RESULT_OK && data != null){
+        if (requestCode == 888 && resultCode == RESULT_OK && data != null) {
             Uri uri = data.getData();
             try {
                 InputStream inputStream = getContentResolver().openInputStream(uri);
                 Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                imageViewImage.setImageBitmap(bitmap);
+                imageView.setImageBitmap(bitmap);
 
             } catch (FileNotFoundException e) {
                 e.printStackTrace();

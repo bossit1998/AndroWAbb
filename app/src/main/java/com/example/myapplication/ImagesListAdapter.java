@@ -55,8 +55,8 @@ public class ImagesListAdapter extends BaseAdapter {
             row = inflater.inflate(layout, null);
 
             holder.txtDescription = (TextView) row.findViewById(R.id.txtDescription);
-            holder.txtPlace = (TextView) row.findViewById(R.id.txtPlace);
-            holder.imageView = (ImageView) row.findViewById(R.id.imgImage);
+            holder.txtPlace = row.findViewById(R.id.txtPlace);
+            holder.imageView = row.findViewById(R.id.imgImage);
             row.setTag(holder);
         }
         else {
